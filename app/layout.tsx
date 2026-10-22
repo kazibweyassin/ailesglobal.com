@@ -13,6 +13,9 @@ export const metadata: Metadata = {
     template: "%s · Ailes Global",
   },
   description: "Find a path to Germany, Canada, Ireland, or the UK. A clear plan, from one profile.",
+  verification: {
+    google: "RUcdY6_Ji1NLW9LsqmsE0F9Y-mPKwAW4cwTHQQpr6E4",
+  },
   alternates: { canonical: "/" },
   openGraph: {
     title: "Ailes Global — Move forward with confidence",
