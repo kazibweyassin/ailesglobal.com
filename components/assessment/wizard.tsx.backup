@@ -1,0 +1,494 @@
+"use client"
+
+import { useEffect, useMemo, useRef, useState } from "react"
+import { useRouter } from "next/navigation"
+import { countries } from "@/data/immigration"
+import { buildTasks, completeness, emptyAnswers, matchCountries, matchPathways } from "@/lib/match"
+import { loadDraft, saveAssessment, saveDraft } from "@/lib/store"
+import type { AssessmentAnswers } from "@/lib/types"
+
+const stepTitles = ["About you", "Destination", "Education", "Work", "Language", "Family", "Financial situation", "Goals", "Review"]
+const stepHints = [
+  "A name is enough to begin. Everything else can wait.",
+  "Where do you want to go? Your destination shapes which questions we ask next.",
+  "Your highest qualification is the one that matters here.",
+  "Work is how most of these routes get read.",
+  "A range is enough. A formal test can come later.",
+  "Tell us who would make the move with you.",
+  "A range is plenty. Exact figures live on the official page.",
+  "Tell us about your plans and timeline.",
+  "Have a look. You can go back and change anything.",
+]
+
+const ageOptions = [
+  ["18-24", "18–24"],
+  ["25-32", "25–32"],
+  ["33-40", "33–40"],
+  ["41-50", "41–50"],
+  ["51+", "51 or older"],
+] as const
+
+const educationOptions = [
+  ["none", "No formal qualification"],
+  ["secondary", "Secondary education"],
+  ["certificate", "Certificate"],
+  ["diploma", "Diploma"],
+  ["bachelor", "Bachelor's"],
+  ["master", "Master's"],
+  ["phd", "PhD"],
+  ["professional", "Professional qualification"],
+] as const
+
+const experienceOptions = [
+  ["0", "Under 1 year"],
+  ["1-2", "1–2 years"],
+  ["3-5", "3–5 years"],
+  ["6-9", "6–9 years"],
+  ["10+", "10 or more years"],
+] as const
+
+const employedOptions = [
+  ["employed", "Employed"],
+  ["self-employed", "Self-employed"],
+  ["unemployed", "Not employed"],
+  ["student", "Student"],
+  ["career-break", "Career break"],
+] as const
+
+const incomeOptions = [
+  ["under-10k", "Under 10,000"],
+  ["10-25k", "10,000–25,000"],
+  ["25-45k", "25,000–45,000"],
+  ["45-70k", "45,000–70,000"],
+  ["70k+", "Over 70,000"],
+] as const
+
+const englishOptions = [
+  ["beginner", "Beginner"],
+  ["intermediate", "Intermediate"],
+  ["advanced", "Advanced"],
+  ["fluent", "Fluent"],
+] as const
+
+const testOptions = [
+  ["none", "None"],
+  ["ielts", "IELTS"],
+  ["toefl", "TOEFL"],
+  ["pte", "PTE"],
+] as const
+
+const cefr = [
+  ["none", "None"],
+  ["A1", "A1"],
+  ["A2", "A2"],
+  ["B1", "B1"],
+  ["B2", "B2"],
+  ["C1", "C1"],
+  ["C2", "C2"],
+] as const
+
+const maritalOptions = [
+  ["single", "Single"],
+  ["married", "Married"],
+  ["partnered", "Partnered"],
+  ["divorced", "Divorced"],
+  ["widowed", "Widowed"],
+] as const
+
+const dependentOptions = [
+  ["0", "None"],
+  ["1", "1"],
+  ["2", "2"],
+  ["3+", "3 or more"],
+] as const
+
+const preferenceOptions = [
+  ["work", "Work"],
+  ["skilled", "Skilled migration"],
+  ["study", "Study"],
+  ["business", "Business"],
+  ["talent", "Talent"],
+  ["family", "Family"],
+  ["unsure", "Not sure"],
+] as const
+
+const timelineOptions = [
+  ["0-6", "0–6 months"],
+  ["6-12", "6–12 months"],
+  ["1-2", "1–2 years"],
+  ["2+", "2 or more years"],
+] as const
+
+const fundOptions = [
+  ["limited", "Limited"],
+  ["moderate", "Enough for some fees"],
+  ["prepared", "Prepared for application costs"],
+  ["unsure", "Not sure"],
+] as const
+
+const refusalOptions = [
+  ["no", "No"],
+  ["yes", "Yes"],
+  ["prefer-not", "Prefer not to say"],
+] as const
+
+const labels = new Map<string, string>(
+  [...ageOptions, ...educationOptions, ...experienceOptions, ...employedOptions, ...incomeOptions, ...englishOptions, ...testOptions, ...cefr, ...maritalOptions, ...dependentOptions, ...preferenceOptions, ...timelineOptions, ...fundOptions, ...refusalOptions].map(([value, label]) => [value, label]),
+)
+
+function labelFor(value: string) {
+  return labels.get(value) ?? value
+}
+
+export function AssessmentWizard({ focus }: { focus?: string }) {
+  const router = useRouter()
+  const [step, setStep] = useState(0)
+  const [answers, setAnswers] = useState<AssessmentAnswers>(emptyAnswers)
+  const [ready, setReady] = useState(false)
+  const topRef = useRef<HTMLDivElement>(null)
+  const filled = useMemo(() => completeness(answers), [answers])
+
+  useEffect(() => {
+    const draft = loadDraft()
+    const next: AssessmentAnswers = {
+      ...(draft ?? emptyAnswers),
+      countries: [...(draft?.countries ?? [])],
+    }
+    const focusSlug = countries.some((country) => country.slug === focus) ? focus : ""
+    if (focusSlug && next.countries.length === 0) next.countries = [focusSlug]
+    setAnswers(next)
+    setReady(true)
+  }, [focus])
+
+  useEffect(() => {
+    if (ready) saveDraft(answers)
+  }, [answers, ready])
+
+  const set = (key: keyof AssessmentAnswers, value: string) => setAnswers((current) => ({ ...current, [key]: value }))
+
+  const go = (next: number) => {
+    setStep(next)
+    requestAnimationFrame(() => topRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }))
+  }
+
+  const toggleCountry = (slug: string) => {
+    setAnswers((current) => ({
+      ...current,
+      countries: current.countries.includes(slug) ? current.countries.filter((item) => item !== slug) : [...current.countries, slug],
+    }))
+  }
+
+  const finish = () => {
+    const matches = matchPathways(answers)
+    saveAssessment({
+      completedAt: new Date().toISOString(),
+      completeness: completeness(answers),
+      answers,
+      matches,
+      countries: matchCountries(matches),
+      tasks: buildTasks(matches),
+    })
+    router.push("/assessment/results")
+  }
+
+  return (
+    <div ref={topRef} className="mx-auto max-w-[760px] scroll-mt-24 px-5 py-12 lg:px-8 lg:py-16">
+      <p className="text-xs font-semibold tracking-[0.18em] text-[#1e4638]">ASSESSMENT</p>
+      <div className="mt-4 flex items-end justify-between gap-4">
+        <h1 className="font-serif text-4xl tracking-[-0.03em] sm:text-5xl">{stepTitles[step]}</h1>
+        <p className="text-sm text-[#5e594f]">
+          Step {step + 1} of {stepTitles.length}
+        </p>
+      </div>
+      <div className="mt-5 flex gap-1.5" aria-label="Assessment progress">
+        {stepTitles.map((title, index) => (
+          <button key={title} type="button" aria-current={index === step ? "step" : undefined} aria-label={title} disabled={index > step} onClick={() => go(index)} className="flex h-11 min-w-0 flex-1 items-center disabled:cursor-default">
+            <span className={`h-2 w-full rounded-full ${index <= step ? "bg-[#1e4638]" : "bg-[#e5d9c6]"}`} />
+          </button>
+        ))}
+      </div>
+      <p className="mt-4 text-sm leading-relaxed text-[#5e594f]">{stepHints[step]}</p>
+      <p className="mt-1 text-sm text-[#5e594f]">Your profile is {filled}% filled. Skip anything you like. This draft stays on this device.</p>
+
+       <div className="mt-8 rounded-[28px] border border-[#e4d9c8] bg-[#fffcf8] p-5 sm:p-8">
+         {step === 0 ? (
+           <div className="grid gap-5">
+             <Field label="First name" value={answers.firstName} onChange={(value) => set("firstName", value)} />
+             <Select label="Age band" value={answers.ageBand} onChange={(value) => set("ageBand", value)} options={ageOptions} />
+             <Field label="Nationality" value={answers.nationality} onChange={(value) => set("nationality", value)} />
+             <Field label="Where do you live now?" value={answers.residence} onChange={(value) => set("residence", value)} />
+           </div>
+         ) : null}
+         {step === 1 ? (
+           <div className="grid gap-5">
+             <fieldset>
+               <legend className="text-sm font-medium">Which countries interest you?</legend>
+               <div className="mt-3 flex flex-wrap gap-2">
+                 {countries.map((country) => {
+                   const selected = answers.countries.includes(country.slug)
+                   return (
+                     <button key={country.slug} type="button" aria-pressed={selected} onClick={() => toggleCountry(country.slug)} className={`min-h-11 rounded-full px-4 py-2.5 text-sm ${selected ? "bg-[#1e4638] text-[#f6f1e7]" : "bg-[#efe6d6] hover:bg-[#e5d9c6]"}`}>
+                       {country.flag} {country.name}
+                     </button>
+                   )
+                 })}
+               </div>
+             </fieldset>
+             {answers.countries.length > 0 && (
+               <div className="mt-4 p-4 rounded-xl bg-[#efe6d6]">
+                 <p className="font-medium">Selected destinations:</p>
+                 <div className="mt-2 flex flex-wrap gap-2">
+                   {answers.countries.map((slug) => {
+                     const country = countries.find((c) => c.slug === slug)
+                     return (
+                       <span key={slug} className="rounded-full px-3 py-1 text-xs font-medium bg-[#e5d9c6]">
+                         {country?.flag} {country?.name}
+                       </span>
+                     )
+                   })}
+                 </div>
+                 <p className="mt-2 text-sm text-[#5e594f]">
+                   Based on your selection, we'll emphasize relevant questions in the following steps.
+                 </p>
+               </div>
+             )}
+           </div>
+         ) : null}
+         {step === 2 ? (
+           <div className="grid gap-5">
+             <Select label="Highest qualification" value={answers.education} onChange={(value) => set("education", value)} options={educationOptions} />
+             <Field label="What did you study?" value={answers.field} onChange={(value) => set("field", value)} />
+             <Field label="Year you completed it" value={answers.graduationYear} onChange={(value) => set("graduationYear", value)} />
+           </div>
+         ) : null}
+         {step === 3 ? (
+           <div className="grid gap-5">
+             <Field label="Current or most recent occupation" value={answers.occupation} onChange={(value) => set("occupation", value)} />
+             <Select label="Years of professional experience" value={answers.experience} onChange={(value) => set("experience", value)} options={experienceOptions} />
+             <Field label="Industry" value={answers.industry} onChange={(value) => set("industry", value)} />
+             <Select label="Employment status" value={answers.employed} onChange={(value) => set("employed", value)} options={employedOptions} />
+             <Select label="Approximate annual income, in US dollars" value={answers.income} onChange={(value) => set("income", value)} options={incomeOptions} />
+           </div>
+         ) : null}
+         {step === 4 ? (
+           <div className="grid gap-5">
+             <div className="space-y-4">
+               <p className="text-sm font-medium">Language skills</p>
+               <div className="grid gap-3">
+                 <div>
+                   <label className="block text-sm font-medium mb-1">English</label>
+                   <div className="flex flex-wrap gap-2">
+                     {englishOptions.map(([optionValue, optionLabel]) => {
+                       const selected = answers.english === optionValue
+                       return (
+                         <button key={optionValue} type="button" aria-pressed={selected} onClick={() => set("english", selected ? "" : optionValue)} className={`min-h-10 rounded-full px-3 py-2 text-left text-sm ${selected ? "bg-[#1e4638] text-[#f6f1e7]" : "bg-[#efe6d6] text-[#1c1b19] hover:bg-[#e5d9c6]"}`}>
+                           {optionLabel}
+                         </button>
+                       )
+                     })}
+                   </div>
+                 </div>
+                 <div>
+                   <label className="block text-sm font-medium mb-1">English test (optional)</label>
+                   <div className="flex flex-wrap gap-2">
+                     {testOptions.map(([optionValue, optionLabel]) => {
+                       const selected = answers.englishTest === optionValue
+                       return (
+                         <button key={optionValue} type="button" aria-pressed={selected} onClick={() => set("englishTest", selected ? "" : optionValue)} className={`min-h-10 rounded-full px-3 py-2 text-left text-sm ${selected ? "bg-[#1e4638] text-[#f6f1e7]" : "bg-[#efe6d6] text-[#1c1b19] hover:bg-[#e5d9c6]"}`}>
+                           {optionLabel}
+                         </button>
+                       )
+                     })}
+                   </div>
+                 </div>
+                 {/* Country-specific language emphasis */}
+                 {answers.countries.length > 0 && (
+                   <div className="mt-4 p-3 rounded-lg border">
+                     <p className="font-medium text-sm">Based on your selected destinations:</p>
+                     <ul className="mt-2 list-disc list-inside text-sm space-y-1">
+                       {answers.countries.map((slug) => {
+                         const country = countries.find((c) => c.slug === slug)
+                         if (!country) return null
+                         
+                         let emphasis = ""
+                         if (slug === "germany") {
+                           emphasis = "German language skills are particularly important for Germany"
+                         } else if (slug === "canada") {
+                           emphasis = "English or French language skills are important for Canada"
+                         } else if (slug === "ireland") {
+                           emphasis = "English language skills are important for Ireland"
+                         } else if (slug === "united-kingdom") {
+                           emphasis = "English language skills are important for the United Kingdom"
+                         }
+                         
+                         return emphasis ? (
+                           <li key={slug}>
+                             {country.flag} {country.name}: {emphasis}
+                           </li>
+                         ) : null
+                       }).filter(Boolean)}
+                     </ul>
+                   </div>
+                 )}
+                 
+                 {!answers.countries.length > 0 && (
+                   <div className="mt-3 p-3 rounded-lg border bg-[#efe6d6]">
+                     <p className="text-sm text-[#5e594f]">
+                       Select your destination countries above to see language recommendations.
+                     </p>
+                   </div>
+                 )}
+                 
+                 <div className="mt-4">
+                   <label className="block text-sm font-medium mb-1">German</label>
+                   <div className="flex flex-wrap gap-2">
+                     {cefr.map(([optionValue, optionLabel]) => {
+                       const selected = answers.german === optionValue
+                       return (
+                         <button key={optionValue} type="button" aria-pressed={selected} onClick={() => set("german", selected ? "" : optionValue)} className={`min-h-10 rounded-full px-3 py-2 text-left text-sm ${selected ? "bg-[#1e4638] text-[#f6f1e7]" : "bg-[#efe6d6] text-[#1c1b19] hover:bg-[#e5d9c6]"}`}>
+                           {optionLabel}
+                         </button>
+                       )
+                     })}
+                   </div>
+                 </div>
+                  <div className="mt-4">
+                    <label className="block text-sm font-medium mb-1">French</label>
+                    <div className="flex flex-wrap gap-2">
+                      {cefr.map(([optionValue, optionLabel]) => {
+                        const selected = answers.french === optionValue
+                        return (
+                          <button key={optionValue} type="button" aria-pressed={selected} onClick={() => set("french", selected ? "" : optionValue)} className={`min-h-10 rounded-full px-3 py-2 text-left text-sm ${selected ? "bg-[#1e4638] text-[#f6f1e7]" : "bg-[#efe6d6] text-[#1c1b19] hover:bg-[#e5d9c6]"}`}>
+                            {optionLabel}
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
+               </div>
+             </div>
+         ) : null}
+         {step === 5 ? (
+           <div className="grid gap-5">
+             <Select label="Marital status" value={answers.marital} onChange={(value) => set("marital", value)} options={maritalOptions} />
+             <Select label="Dependants" value={answers.dependents} onChange={(value) => set("dependents", value)} options={dependentOptions} />
+             <p className="text-sm leading-relaxed text-[#5e594f]">Family often travels with the plan. Tell us who is coming so we can account for them.</p>
+           </div>
+         ) : null}
+         {step === 6 ? (
+           <div className="grid gap-5">
+             <Select label="Ability to cover application costs and proof-of-funds requests" value={answers.funds} onChange={(value) => set("funds", value)} options={fundOptions} />
+             <p className="text-sm leading-relaxed text-[#5e594f]">A range is plenty. When a route publishes an exact figure, it lives on the official page.</p>
+             
+             {/* Country-specific funds guidance */}
+             {answers.countries.length > 0 && (
+               <div className="mt-3 p-3 rounded-lg border">
+                 <p className="font-medium text-sm">Proof of funds considerations:</p>
+                 <ul className="mt-2 list-disc list-inside text-sm space-y-1">
+                   {answers.countries.map((slug) => {
+                     const country = countries.find((c) => c.slug === slug)
+                     if (!country) return null
+                     
+                     let guidance = ""
+                     if (slug === "germany") {
+                       guidance = "Germany may require proof of funds for certain routes like the Opportunity Card"
+                     } else if (slug === "canada") {
+                       guidance = "Canada requires proof of funds for most immigration programs"
+                     } else if (slug === "ireland") {
+                       guidance = "Ireland has specific financial requirements for employment permits"
+                     } else if (slug === "united-kingdom") {
+                       guidance = "The UK has financial requirements for various visa routes"
+                     }
+                     
+                     return guidance ? (
+                       <li key={slug}>
+                         {country.flag} {country.name}: {guidance}
+                       </li>
+                     ) : null
+                   }).filter(Boolean)}
+                 </ul>
+               </div>
+             )}
+           </div>
+         ) : null}
+         {step === 7 ? (
+           <div className="grid gap-5">
+             <Select label="What are you trying to achieve?" value={answers.preference} onChange={(value) => set("preference", value)} options={preferenceOptions} />
+             <Select label="How soon do you want to move?" value={answers.timeline} onChange={(value) => set("timeline", value)} options={timelineOptions} />
+             <Select label="Any previous visa refusal?" value={answers.refusals} onChange={(value) => set("refusals", value)} options={refusalOptions} />
+           </div>
+         ) : null}
+         {step === 8 ? (
+           <div className="grid gap-3 text-sm leading-relaxed">
+             <Summary label="Name" value={answers.firstName} />
+             <Summary label="Age" value={labelFor(answers.ageBand)} />
+             <Summary label="Nationality" value={answers.nationality} />
+             <Summary label="Lives in" value={answers.residence} />
+             <Summary label="Education" value={labelFor(answers.education)} />
+             <Summary label="Field" value={answers.field} />
+             <Summary label="Occupation" value={answers.occupation} />
+             <Summary label="Experience" value={labelFor(answers.experience)} />
+             <Summary label="English" value={labelFor(answers.english)} />
+             <Summary label="German" value={labelFor(answers.german)} />
+             <Summary label="French" value={labelFor(answers.french)} />
+             <Summary label="Countries" value={answers.countries.map((slug) => countries.find((country) => country.slug === slug)?.name ?? slug).join(", ")} />
+             <Summary label="Goal" value={labelFor(answers.preference)} />
+             {filled < 35 ? <p className="rounded-2xl bg-[#efe6d6] p-4">A little more on education, work, or a destination will make this clearer. You can still continue.</p> : null}
+           </div>
+         ) : null}
+
+         <div className="sticky bottom-3 z-20 mt-8 flex items-center justify-between gap-3 rounded-full border border-[#e4d9c8] bg-[#fffcf8]/95 p-2 shadow-[0_10px_30px_rgba(28,27,25,0.12)] backdrop-blur">
+           <button type="button" className="min-h-11 rounded-full px-5 text-sm font-medium disabled:opacity-40" onClick={() => go(Math.max(0, step - 1))} disabled={step === 0}>
+             Back
+           </button>
+           {step < stepTitles.length - 1 ? (
+             <button type="button" className="min-h-11 rounded-full bg-[#1e4638] px-5 text-sm font-medium text-[#f6f1e7]" onClick={() => go(step + 1)}>
+               Continue
+             </button>
+           ) : (
+             <button type="button" className="min-h-11 rounded-full bg-[#1e4638] px-5 text-sm font-medium text-[#f6f1e7]" onClick={finish}>
+               See where I stand
+             </button>
+           )}
+         </div>
+       </div>
+    </div>
+  )
+}
+
+function Field({ label, value, onChange }: { label: string; value: string; onChange: (value: string) => void }) {
+  const id = label.replace(/\s+/g, "-").toLowerCase()
+  return (
+    <label htmlFor={id} className="block">
+      <span className="text-sm font-medium">{label}</span>
+      <input id={id} value={value} onChange={(event) => onChange(event.target.value)} autoComplete={label === "First name" ? "given-name" : "off"} className="mt-2 min-h-12 w-full rounded-2xl border border-[#e4d9c8] bg-white px-4 py-3 text-base outline-none" />
+    </label>
+  )
+}
+
+function Select({ label, value, onChange, options }: { label: string; value: string; onChange: (value: string) => void; options: readonly (readonly [string, string])[] }) {
+  return (
+    <fieldset>
+      <legend className="text-sm font-medium">{label}</legend>
+      <div className="mt-3 flex flex-wrap gap-2">
+        {options.map(([optionValue, optionLabel]) => {
+          const selected = value === optionValue
+          return (
+            <button key={optionValue} type="button" aria-pressed={selected} onClick={() => onChange(selected ? "" : optionValue)} className={`min-h-11 rounded-full px-4 py-2.5 text-left text-sm leading-snug ${selected ? "bg-[#1e4638] text-[#f6f1e7]" : "bg-[#efe6d6] text-[#1c1b19] hover:bg-[#e5d9c6]"}`}>
+              {optionLabel}
+            </button>
+          )
+        })}
+      </div>
+    </fieldset>
+  )
+}
+
+function Summary({ label, value }: { label: string; value: string }) {
+  return (
+    <p className="flex justify-between gap-4 border-b border-[#efe6d6] py-2">
+      <span className="text-[#5e594f]">{label}</span>
+      <span className="text-right">{value || "Not answered"}</span>
+    </p>
+  )
+}

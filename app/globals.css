@@ -1,0 +1,183 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@import 'shadcn/tailwind.css';
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --font-sans: var(--font-outfit), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-instrument), Georgia, "Times New Roman", serif;
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-destructive: var(--destructive);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+:root {
+  color-scheme: light;
+  --background: #f6f1e7;
+  --foreground: #1c1b19;
+  --card: #fffcf8;
+  --card-foreground: #1c1b19;
+  --primary: #1e4638;
+  --primary-foreground: #f6f1e7;
+  --secondary: #efe6d6;
+  --secondary-foreground: #1c1b19;
+  --muted: #efe6d6;
+  --muted-foreground: #5e594f;
+  --accent: #d7ebf6;
+  --accent-foreground: #1c1b19;
+  --popover: #fffcf8;
+  --popover-foreground: #1c1b19;
+  --border: #e4d9c8;
+  --input: #e4d9c8;
+  --ring: #1e4638;
+  --destructive: #9c3b2e;
+  --radius: 0.9rem;
+}
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid #1e4638;
+  outline-offset: 3px;
+}
+
+* {
+  @apply border-border outline-ring/50;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+img,
+video {
+  max-width: 100%;
+}
+
+.grid > * {
+  min-width: 0;
+}
+
+body {
+  @apply bg-background text-foreground;
+}
+
+::selection {
+  background: #d7e6c8;
+  color: #1c1b19;
+}
+
+/* Wesbridge-style hero background */
+.hero-gradient {
+  background: linear-gradient(160deg, #1a5fa8 0%, #16487a 50%, #0d2f52 100%);
+}
+
+/* Subtle grid pattern */
+.grid-pattern {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+/* Card hover lift */
+.card-hover {
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
+.card-hover:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 50px rgba(15, 31, 53, 0.12);
+}
+
+/* Stat counter highlight */
+.stat-number {
+  font-variant-numeric: tabular-nums;
+}
+
+/* FAQ accordion */
+.faq-item {
+  border-bottom: 1px solid var(--border);
+}
+
+/* Testimonial card */
+.testimonial-card {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(15, 31, 53, 0.06);
+}
+
+/* Mega menu */
+.mega-menu {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: 0 0 1rem 1rem;
+  box-shadow: 0 20px 60px rgba(15, 31, 53, 0.15);
+}
+
+/* Progress bar for quiz */
+.quiz-progress {
+  height: 4px;
+  background: var(--muted);
+  border-radius: 9999px;
+  overflow: hidden;
+}
+
+.quiz-progress-fill {
+  height: 100%;
+  background: var(--primary);
+  border-radius: 9999px;
+  transition: width 0.4s ease;
+}
+
+/* Process step connector */
+.process-connector {
+  position: relative;
+}
+
+.process-connector::after {
+  content: '';
+  position: absolute;
+  top: 24px;
+  left: 50%;
+  width: calc(100% - 48px);
+  height: 2px;
+  background: var(--border);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
