@@ -1,7 +1,8 @@
-import type { Metadata } from "next"
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import { getResource, resources } from "@/data/immigration"
+import { JsonLd } from "@/components/site/json-ld"
+import { breadcrumb, pageMeta, siteName, siteUrl } from "@/lib/seo"
 
 type Params = { slug: string }
 
@@ -13,7 +14,11 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
   const { slug } = await params
   const resource = getResource(slug)
   if (!resource) return {}
-  return { title: resource.title, description: resource.summary, alternates: { canonical: `/resources/${resource.slug}` } }
+  return pageMeta({
+    title: resource.title,
+    description: resource.summary,
+    path: `/resources/${resource.slug}`,
+  })
 }
 
 export default async function ResourcePage({ params }: { params: Promise<Params> }) {
@@ -23,6 +28,27 @@ export default async function ResourcePage({ params }: { params: Promise<Params>
 
   return (
     <article className="mx-auto max-w-[760px] px-5 py-14 lg:px-8">
+      <JsonLd
+        data={{
+          "@context": "https://schema.org",
+          "@graph": [
+            breadcrumb([
+              { name: "Home", path: "/" },
+              { name: "Resources", path: "/resources" },
+              { name: resource.title, path: `/resources/${resource.slug}` },
+            ]),
+            {
+              "@type": "Article",
+              headline: resource.title,
+              description: resource.summary,
+              url: `${siteUrl}/resources/${resource.slug}`,
+              author: { "@id": `${siteUrl}/#organization` },
+              publisher: { "@type": "Organization", name: siteName, url: siteUrl },
+              mainEntityOfPage: `${siteUrl}/resources/${resource.slug}`,
+            },
+          ],
+        }}
+      />
       <p className="text-xs font-semibold tracking-[0.18em] text-[#1e4638]">{resource.category.toUpperCase()}</p>
       <h1 className="mt-3 font-serif text-5xl leading-[1.05] tracking-[-0.03em]">{resource.title}</h1>
       <p className="mt-4 text-sm text-[#5e594f]">{resource.readTime} read</p>

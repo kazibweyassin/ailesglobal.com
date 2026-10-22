@@ -1,8 +1,9 @@
-import type { Metadata } from "next"
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import { countries, pathwaysFor } from "@/data/immigration"
 import { FaqList } from "@/components/individuals/faq-list"
+import { JsonLd } from "@/components/site/json-ld"
+import { breadcrumb, faqEntity, pageMeta, siteUrl } from "@/lib/seo"
 
 type Params = { slug: string }
 
@@ -14,11 +15,11 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
   const { slug } = await params
   const country = countries.find((item) => item.slug === slug)
   if (!country) return {}
-  return {
+  return pageMeta({
     title: `${country.name} immigration pathways`,
-    description: country.overview,
-    alternates: { canonical: `/countries/${country.slug}` },
-  }
+    description: `${country.summary} The official page is ${country.source.sourceName}.`,
+    path: `/countries/${country.slug}`,
+  })
 }
 
 export default async function CountryPage({ params }: { params: Promise<Params> }) {
@@ -29,6 +30,26 @@ export default async function CountryPage({ params }: { params: Promise<Params> 
 
   return (
     <article className="mx-auto max-w-[1180px] px-5 py-14 lg:px-8">
+      <JsonLd
+        data={{
+          "@context": "https://schema.org",
+          "@graph": [
+            breadcrumb([
+              { name: "Home", path: "/" },
+              { name: "Countries", path: "/countries" },
+              { name: country.name, path: `/countries/${country.slug}` },
+            ]),
+            ...(country.faqs.length ? [faqEntity(country.faqs)] : []),
+            {
+              "@type": "WebPage",
+              name: `${country.name} immigration pathways`,
+              url: `${siteUrl}/countries/${country.slug}`,
+              description: country.overview,
+              isPartOf: { "@id": `${siteUrl}/#website` },
+            },
+          ],
+        }}
+      />
       <p className="text-xs font-semibold tracking-[0.18em] text-[#1e4638]">COUNTRY</p>
       <h1 className="mt-3 font-serif text-5xl tracking-[-0.03em] sm:text-6xl">
         <span aria-hidden="true">{country.flag} </span>

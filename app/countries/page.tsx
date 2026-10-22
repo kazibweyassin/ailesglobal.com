@@ -1,14 +1,14 @@
-import type { Metadata } from "next"
 import Link from "next/link"
 import { ArrowRight } from "lucide-react"
 import { countries } from "@/data/immigration"
 import { PageIntro } from "@/components/site/page-intro"
+import { pageMeta } from "@/lib/seo"
 
-export const metadata: Metadata = {
-  title: "Countries",
-  description: "Germany, Canada, Ireland, and the United Kingdom. Four countries, one clear view.",
-  alternates: { canonical: "/countries" },
-}
+export const metadata = pageMeta({
+  title: "Germany, Canada, Ireland, and the UK",
+  description: "Four countries, one clear view. Open a country for the paths people take, who they tend to fit, and the official page.",
+  path: "/countries",
+})
 
 export default function CountriesPage() {
   return (

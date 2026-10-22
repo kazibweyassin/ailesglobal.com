@@ -1,13 +1,13 @@
-import type { Metadata } from "next"
 import Link from "next/link"
 import { countries, pathways } from "@/data/immigration"
 import { PageIntro } from "@/components/site/page-intro"
+import { pageMeta } from "@/lib/seo"
 
-export const metadata: Metadata = {
-  title: "Pathways",
+export const metadata = pageMeta({
+  title: "Pathways to work and live abroad",
   description: "The paths people take to work and live in Germany, Canada, Ireland, and the United Kingdom.",
-  alternates: { canonical: "/pathways" },
-}
+  path: "/pathways",
+})
 
 export default function PathwaysPage() {
   return (

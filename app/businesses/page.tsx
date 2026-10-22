@@ -1,11 +1,11 @@
-import type { Metadata } from "next"
 import { BusinessExperience } from "@/components/businesses/experience"
+import { pageMeta } from "@/lib/seo"
 
-export const metadata: Metadata = {
+export const metadata = pageMeta({
   title: "For businesses",
   description: "Help the people you hire see where they stand for Germany, Canada, Ireland, and the UK.",
-  alternates: { canonical: "/businesses" },
-}
+  path: "/businesses",
+})
 
 export default function BusinessesPage() {
   return <BusinessExperience />

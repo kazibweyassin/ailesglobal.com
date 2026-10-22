@@ -1,13 +1,13 @@
-import type { Metadata } from "next"
 import Link from "next/link"
 import { resources } from "@/data/immigration"
 import { PageIntro } from "@/components/site/page-intro"
+import { pageMeta } from "@/lib/seo"
 
-export const metadata: Metadata = {
-  title: "Resources",
+export const metadata = pageMeta({
+  title: "Guides",
   description: "Short guides for the road to Germany, Canada, Ireland, and the UK.",
-  alternates: { canonical: "/resources" },
-}
+  path: "/resources",
+})
 
 export default function ResourcesPage() {
   return (

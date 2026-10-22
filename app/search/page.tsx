@@ -1,11 +1,12 @@
-import type { Metadata } from "next"
 import { SearchView } from "@/components/search/search-view"
+import { pageMeta } from "@/lib/seo"
 
-export const metadata: Metadata = {
+export const metadata = pageMeta({
   title: "Search",
   description: "Search countries, pathways, guides, and questions.",
-  alternates: { canonical: "/search" },
-}
+  path: "/search",
+  index: false,
+})
 
 export default function SearchPage() {
   return <SearchView />

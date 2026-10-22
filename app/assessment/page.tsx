@@ -1,11 +1,11 @@
-import type { Metadata } from "next"
 import { AssessmentWizard } from "@/components/assessment/wizard"
+import { pageMeta } from "@/lib/seo"
 
-export const metadata: Metadata = {
+export const metadata = pageMeta({
   title: "See if you qualify",
   description: "A few questions about your story. A clearer picture of Germany, Canada, Ireland, and the UK.",
-  alternates: { canonical: "/assessment" },
-}
+  path: "/assessment",
+})
 
 export default async function AssessmentPage({ searchParams }: { searchParams: Promise<{ focus?: string }> }) {
   const { focus } = await searchParams

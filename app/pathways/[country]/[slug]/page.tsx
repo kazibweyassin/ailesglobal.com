@@ -1,8 +1,9 @@
-import type { Metadata } from "next"
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import { getCountry, getPathway, pathways } from "@/data/immigration"
 import { SaveButton } from "@/components/pathways/save-button"
+import { JsonLd } from "@/components/site/json-ld"
+import { breadcrumb, pageMeta, siteUrl } from "@/lib/seo"
 
 type Params = { country: string; slug: string }
 
@@ -15,11 +16,11 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
   const pathway = getPathway(countrySlug, slug)
   const country = getCountry(countrySlug)
   if (!pathway || !country) return {}
-  return {
+  return pageMeta({
     title: `${pathway.name} — ${country.name}`,
     description: pathway.summary,
-    alternates: { canonical: `/pathways/${country.slug}/${pathway.slug}` },
-  }
+    path: `/pathways/${country.slug}/${pathway.slug}`,
+  })
 }
 
 export default async function PathwayPage({ params }: { params: Promise<Params> }) {
@@ -30,6 +31,26 @@ export default async function PathwayPage({ params }: { params: Promise<Params> 
 
   return (
     <article className="mx-auto max-w-[900px] px-5 py-14 lg:px-8">
+      <JsonLd
+        data={{
+          "@context": "https://schema.org",
+          "@graph": [
+            breadcrumb([
+              { name: "Home", path: "/" },
+              { name: "Pathways", path: "/pathways" },
+              { name: country.name, path: `/countries/${country.slug}` },
+              { name: pathway.name, path: `/pathways/${country.slug}/${pathway.slug}` },
+            ]),
+            {
+              "@type": "WebPage",
+              name: `${pathway.name} — ${country.name}`,
+              url: `${siteUrl}/pathways/${country.slug}/${pathway.slug}`,
+              description: pathway.description,
+              isPartOf: { "@id": `${siteUrl}/#website` },
+            },
+          ],
+        }}
+      />
       <p className="text-xs font-semibold tracking-[0.18em] text-[#1e4638]">
         <Link href={`/countries/${country.slug}`} className="hover:underline">
           {country.name}

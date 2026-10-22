@@ -13,6 +13,23 @@ const nextConfig = {
         destination: "/assessment",
         permanent: true,
       },
+      {
+        source: "/llm.txt",
+        destination: "/llms.txt",
+        permanent: true,
+      },
+    ]
+  },
+  async headers() {
+    return [
+      {
+        source: "/:path*",
+        headers: [{ key: "Link", value: '<https://ailesglobal.com/llms.txt>; rel="describedby"' }],
+      },
+      {
+        source: "/",
+        headers: [{ key: "Link", value: '<https://ailesglobal.com/llms.txt>; rel="describedby"' }],
+      },
     ]
   },
 }

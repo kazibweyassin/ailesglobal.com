@@ -1,11 +1,11 @@
-import type { Metadata } from "next"
 import { IndividualsExperience } from "@/components/individuals/experience"
+import { pageMeta } from "@/lib/seo"
 
-export const metadata: Metadata = {
+export const metadata = pageMeta({
   title: "For individuals",
   description: "See where you stand for Germany, Canada, Ireland, and the UK. A clear plan, from one profile.",
-  alternates: { canonical: "/services/individuals" },
-}
+  path: "/",
+})
 
 export default function IndividualsPage() {
   return <IndividualsExperience />

@@ -1,11 +1,12 @@
-import type { Metadata } from "next"
 import { DashboardView } from "@/components/dashboard/dashboard-view"
+import { pageMeta } from "@/lib/seo"
 
-export const metadata: Metadata = {
+export const metadata = pageMeta({
   title: "Dashboard",
   description: "Your plan, your saved pathways, and the next steps, kept on this device.",
-  alternates: { canonical: "/dashboard" },
-}
+  path: "/dashboard",
+  index: false,
+})
 
 export default function DashboardPage() {
   return <DashboardView />
