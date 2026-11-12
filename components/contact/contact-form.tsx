@@ -27,6 +27,7 @@ export function ContactForm({ interest }: { interest?: string }) {
         Topic
         <select name="interest" defaultValue={interest || "product"} className="mt-2 w-full rounded-2xl border border-[#e4d9c8] bg-white px-4 py-3 font-normal">
           <option value="product">A question about my path</option>
+          <option value="study">Study abroad or scholarships</option>
           <option value="guided">Tell me when guided support is ready</option>
           <option value="employer">I am hiring</option>
           <option value="correction">A source looks out of date</option>

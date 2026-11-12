@@ -4,6 +4,7 @@ import { countries, faqs, illustrative, pathways, resources, steps } from "@/dat
 import { FaqList } from "@/components/individuals/faq-list"
 import { Pricing } from "@/components/individuals/pricing"
 import { ScoreBar, StatusPill } from "@/components/ui/fit"
+import { countryPhotos, photos } from "@/lib/photos"
 import { statusFor } from "@/lib/match"
 
 const directory = [
@@ -88,7 +89,7 @@ export function IndividualsExperience() {
               </Link>
             </div>
           </div>
-          <img src="/images/journey.jpg" alt="Three adults walking together along a coastal path" className="aspect-[4/5] w-full rounded-[28px] object-cover sm:aspect-[5/4] lg:aspect-[4/5]" />
+          <img src={photos.journey.src} alt={photos.journey.alt} fetchPriority="high" className="aspect-[4/5] w-full rounded-[28px] object-cover sm:aspect-[5/4] lg:aspect-[4/5]" />
         </div>
       </section>
 
@@ -154,16 +155,22 @@ export function IndividualsExperience() {
         <p className="text-[11px] font-semibold tracking-[0.16em] text-[#1e4638]">WHERE YOU CAN GO</p>
         <h2 className="mt-3 max-w-2xl font-serif text-4xl tracking-[-0.03em] sm:text-5xl">Four countries, one clear view</h2>
         <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {countries.map((country) => (
-            <Link key={country.slug} href={`/countries/${country.slug}`} className="group flex min-h-64 flex-col rounded-[24px] bg-[#f3efe6] p-5 transition hover:bg-[#efe6d6]">
-              <span className="flex items-center justify-between">
-                <span className="text-2xl" aria-hidden="true">{country.flag}</span>
-                <ArrowUpRight className="text-[#1e4638] transition group-hover:-translate-y-0.5 group-hover:translate-x-0.5" size={18} aria-hidden="true" />
-              </span>
-              <span className="mt-8 font-serif text-3xl tracking-[-0.03em]">{country.name}</span>
-              <span className="mt-3 text-sm leading-relaxed text-[#5e594f]">{country.summary}</span>
-            </Link>
-          ))}
+          {countries.map((country) => {
+            const photo = countryPhotos[country.slug]
+            return (
+              <Link key={country.slug} href={`/countries/${country.slug}`} className="group flex min-h-64 flex-col overflow-hidden rounded-[24px] bg-[#f3efe6] transition hover:bg-[#efe6d6]">
+                {photo ? <img src={photo.src} alt="" className="aspect-[4/3] w-full object-cover" /> : null}
+                <span className="flex flex-1 flex-col p-5">
+                  <span className="flex items-center justify-between">
+                    <span className="text-2xl" aria-hidden="true">{country.flag}</span>
+                    <ArrowUpRight className="text-[#1e4638] transition group-hover:-translate-y-0.5 group-hover:translate-x-0.5" size={18} aria-hidden="true" />
+                  </span>
+                  <span className="mt-6 font-serif text-3xl tracking-[-0.03em]">{country.name}</span>
+                  <span className="mt-3 text-sm leading-relaxed text-[#5e594f]">{country.summary}</span>
+                </span>
+              </Link>
+            )
+          })}
         </div>
       </section>
 
@@ -171,7 +178,7 @@ export function IndividualsExperience() {
         <div className="mx-auto grid max-w-[1180px] items-center gap-12 px-5 py-20 lg:grid-cols-2 lg:px-8">
           <div>
             <h2 className="max-w-md font-serif text-5xl leading-[1.02] tracking-[-0.04em] sm:text-6xl">Built for the journey ahead</h2>
-            <img src="/images/hero.jpg" alt="Aerial view of green fields crossed by narrow paths" className="mt-8 aspect-[4/5] w-full rounded-[28px] object-cover sm:aspect-[16/10] lg:aspect-[4/5]" />
+            <img src={photos.path.src} alt={photos.path.alt} className="mt-8 aspect-[4/5] w-full rounded-[28px] object-cover sm:aspect-[16/10] lg:aspect-[4/5]" />
           </div>
           <ul className="grid gap-8">
             {benefits.map((benefit) => (

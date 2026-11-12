@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { ArrowRight } from "lucide-react"
 import { countries, steps } from "@/data/immigration"
+import { countryPhotos, photos } from "@/lib/photos"
 
 const beliefs = [
   { title: "Your story first", text: "Education, work, language, family, funds, and where you want to go. The routes come after that, not before." },
@@ -19,12 +20,13 @@ export function AboutExperience() {
   return (
     <>
       <section className="bg-[#f3f6f1]">
-        <div className="mx-auto grid max-w-[1180px] items-end gap-10 px-5 py-16 lg:grid-cols-[1.15fr_0.85fr] lg:px-8 lg:py-24">
+        <div className="mx-auto grid max-w-[1180px] items-center gap-10 px-5 py-16 lg:grid-cols-[1.15fr_0.85fr] lg:px-8 lg:py-24">
           <div>
             <p className="inline-flex rounded-full border border-[#1e4638] px-3 py-1 text-[11px] font-semibold tracking-[0.16em] text-[#1e4638]">ABOUT</p>
             <h1 className="mt-6 max-w-3xl font-serif text-5xl leading-[0.98] tracking-[-0.045em] sm:text-6xl lg:text-7xl">Know where you can go. Know what it takes.</h1>
+            <p className="mt-6 max-w-md text-lg leading-relaxed text-[#3a362f]">Ailes is a way to compare Germany, Canada, Ireland, and the United Kingdom from one profile, then leave with the gaps and a next step.</p>
           </div>
-          <p className="max-w-md text-lg leading-relaxed text-[#3a362f]">Ailes is a way to compare Germany, Canada, Ireland, and the United Kingdom from one profile, then leave with the gaps and a next step.</p>
+          <img src={photos.path.src} alt={photos.path.alt} className="aspect-[4/3] w-full rounded-[28px] object-cover" />
         </div>
       </section>
 
@@ -73,13 +75,19 @@ export function AboutExperience() {
         </div>
         <p className="mt-4 max-w-2xl text-[#4e4940]">Germany, Canada, Ireland, and the United Kingdom. Each country page names the routes, the checks, and the official source.</p>
         <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {countries.map((country) => (
-            <Link key={country.slug} href={`/countries/${country.slug}`} className="group flex min-h-52 flex-col rounded-[24px] bg-[#f3efe6] p-5 transition hover:bg-[#efe6d6]">
-              <span className="text-2xl" aria-hidden="true">{country.flag}</span>
-              <span className="mt-6 font-serif text-3xl tracking-[-0.03em]">{country.name}</span>
-              <span className="mt-2 text-sm leading-relaxed text-[#5e594f]">{country.summary}</span>
-            </Link>
-          ))}
+          {countries.map((country) => {
+            const photo = countryPhotos[country.slug]
+            return (
+              <Link key={country.slug} href={`/countries/${country.slug}`} className="group flex min-h-52 flex-col overflow-hidden rounded-[24px] bg-[#f3efe6] transition hover:bg-[#efe6d6]">
+                {photo ? <img src={photo.src} alt="" className="aspect-[4/3] w-full object-cover" /> : null}
+                <span className="flex flex-1 flex-col p-5">
+                  <span className="text-2xl" aria-hidden="true">{country.flag}</span>
+                  <span className="mt-4 font-serif text-3xl tracking-[-0.03em]">{country.name}</span>
+                  <span className="mt-2 text-sm leading-relaxed text-[#5e594f]">{country.summary}</span>
+                </span>
+              </Link>
+            )
+          })}
         </div>
       </section>
 

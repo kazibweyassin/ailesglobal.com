@@ -2,6 +2,7 @@ import Link from "next/link"
 import { ArrowRight, ArrowUpRight, FileText, Landmark, Users } from "lucide-react"
 import { countries, resources } from "@/data/immigration"
 import { FaqList } from "@/components/individuals/faq-list"
+import { photos } from "@/lib/photos"
 
 const features = [
   { title: "One view. Four countries.", text: "A candidate sees Germany, Canada, Ireland, and the UK from one profile, with a score, the gaps, and the route that rose." },
@@ -64,7 +65,7 @@ export function BusinessExperience() {
               </Link>
             </div>
           </div>
-          <img src="/images/journey.jpg" alt="Three adults walking together along a coastal path" className="aspect-[4/5] w-full rounded-[28px] object-cover sm:aspect-[5/4] lg:aspect-[4/5]" />
+          <img src={photos.team.src} alt={photos.team.alt} fetchPriority="high" className="aspect-[4/5] w-full rounded-[28px] object-cover sm:aspect-[5/4] lg:aspect-[4/5]" />
         </div>
       </section>
 

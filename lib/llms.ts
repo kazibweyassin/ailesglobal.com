@@ -1,4 +1,5 @@
 import { countries, faqs, pathways, resources } from "@/data/immigration"
+import { scholarshipsUrl } from "@/lib/links"
 import { siteUrl } from "@/lib/seo"
 
 function link(title: string, path: string, note: string) {
@@ -42,6 +43,7 @@ ${link("Resources", "/resources", "Short guides on scores, costs, and the main r
 ${link("FAQs", "/faqs", "What Ailes is, what the score means, and how current the pages are.")}
 ${link("About", "/about", "How Ailes compares the four countries from one profile.")}
 ${link("For businesses", "/businesses", "For employers helping the people they hire see where they stand.")}
+- [Scholarships](${scholarshipsUrl}): Find scholarships first, then your university. The Ailes scholarship platform for African students.
 ${link("Contact", "/contact", "Write with the country and the pathway in mind. hello@ailesglobal.com.")}
 
 ## Countries

@@ -1,9 +1,11 @@
 import Link from "next/link"
 import { countries, pathways } from "@/data/immigration"
 import { Wordmark } from "@/components/site/wordmark"
+import { scholarshipsUrl } from "@/lib/links"
 
 const product = [
   { href: "/assessment", label: "See if you qualify" },
+  { href: scholarshipsUrl, label: "Scholarships", external: true },
   { href: "/dashboard", label: "Dashboard" },
   { href: "/countries", label: "Countries" },
   { href: "/pathways", label: "Pathways" },
@@ -58,9 +60,15 @@ export function SiteFooter() {
             <ul className="mt-4 grid gap-2 text-sm text-[#efe6d6]">
               {product.map((item) => (
                 <li key={item.href}>
-                  <Link href={item.href} className="hover:text-white">
-                    {item.label}
-                  </Link>
+                  {"external" in item && item.external ? (
+                    <a href={item.href} className="hover:text-white">
+                      {item.label}
+                    </a>
+                  ) : (
+                    <Link href={item.href} className="hover:text-white">
+                      {item.label}
+                    </Link>
+                  )}
                 </li>
               ))}
             </ul>

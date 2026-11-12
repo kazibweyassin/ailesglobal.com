@@ -3,6 +3,7 @@ import { notFound } from "next/navigation"
 import { countries, pathwaysFor } from "@/data/immigration"
 import { FaqList } from "@/components/individuals/faq-list"
 import { JsonLd } from "@/components/site/json-ld"
+import { countryPhotos } from "@/lib/photos"
 import { breadcrumb, faqEntity, pageMeta, siteUrl } from "@/lib/seo"
 
 type Params = { slug: string }
@@ -27,6 +28,7 @@ export default async function CountryPage({ params }: { params: Promise<Params> 
   const country = countries.find((item) => item.slug === slug)
   if (!country) notFound()
   const routes = pathwaysFor(country.slug)
+  const photo = countryPhotos[country.slug]
 
   return (
     <article className="mx-auto max-w-[1180px] px-5 py-14 lg:px-8">
@@ -56,6 +58,7 @@ export default async function CountryPage({ params }: { params: Promise<Params> 
         {country.name}
       </h1>
       <p className="mt-5 max-w-3xl text-lg leading-relaxed text-[#4e4940]">{country.overview}</p>
+      {photo ? <img src={photo.src} alt={photo.alt} className="mt-8 aspect-[16/9] w-full rounded-[28px] object-cover" /> : null}
       <div className="mt-8 flex flex-wrap gap-3">
         <Link href={`/assessment?focus=${country.slug}`} className="rounded-full bg-[#1e4638] px-5 py-3 text-sm font-medium text-[#f6f1e7]">
           See if you qualify

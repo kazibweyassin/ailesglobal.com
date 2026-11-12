@@ -18,6 +18,16 @@ const nextConfig = {
         destination: "/llms.txt",
         permanent: true,
       },
+      {
+        source: "/scholarships",
+        destination: "https://ailes-global-rebuild.vercel.app/",
+        permanent: false,
+      },
+      {
+        source: "/study-abroad",
+        destination: "https://ailes-global-rebuild.vercel.app/",
+        permanent: false,
+      },
     ]
   },
   async headers() {
